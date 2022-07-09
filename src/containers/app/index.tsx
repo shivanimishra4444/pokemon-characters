@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import PokemonLogo from '@/assets/logo.png'
 import './app.scss'
+import { Pokemon } from '@/components/pokemon';
 
 
 
@@ -16,6 +17,8 @@ const App = () => {
                         </h1>
 			        </div>
 	        </header>
+            <Pokemon />
+
         </section>
     )
 }
