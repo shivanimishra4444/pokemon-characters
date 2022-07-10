@@ -1,4 +1,5 @@
 import { getPokemon, getPokemonDetails, getPokemonPagination } from '@/config/api';
+import { getParamsFromURI } from '@/helper/helper';
 import React, { useEffect, useState } from 'react';
 import Card from '../card';
 import NoOfCardSelect from '../dropdown/noOfCardSelect';
@@ -34,24 +35,30 @@ export interface IDetail {
 interface IMove {
     move: { name: string }
 }
- const Pokemon: React.FC = () => {
+const Pokemon: React.FC = () => {
 
     const [pokemons, setPokemons] = useState<IPokemon>({ data: [], nextUrl: '', prevUrl: '' })
-    const [limit, setLimit] = useState<number>(20)
-    const [offset, setOffset] = useState<number>(0)
     const [details, setDetails] = useState<IDetail[]>([])
     const [searchText, setSearchText] = useState('')
     const [searchedList, setSearchedList] = useState<IDetail[]>([])
-    const localSortby = window.localStorage.getItem('sortedBy')
+    const localSortby = localStorage.getItem('sortedBy')
+    const localLimit = localStorage.getItem('limit')
+    const localOffset = localStorage.getItem('offset')
 
-
+    const [pageCount, setPageCount] = useState<number>(1)
 
     useEffect(() => {
         const fetchPokemon = async () => {
+            const limit = localLimit ? parseInt(localLimit) : 20
+            const offset = localOffset ? parseInt(localOffset) : 0
             const result = await getPokemon(limit, offset);
+            const params = getParamsFromURI(result.next)
             setPokemons({ data: result.results, nextUrl: result.next, prevUrl: result.previous })
+            setPageCount(parseInt(params.get('offset')) / parseInt(params.get('limit')))
         }
         fetchPokemon()
+
+        //on page load
     }, [])
 
     useEffect(() => {
@@ -67,12 +74,12 @@ interface IMove {
         pokemons.data.forEach((pokemon) => {
             getDetails(pokemon.url)
         })
-            
+
     }, [pokemons])
 
-
+    //on card click
     const getPokemonFromApi = async (limit: number) => {
-        const result = await getPokemon(limit, offset);
+        const result = await getPokemon(limit, parseInt(localOffset));
         setPokemons({ data: result.results, nextUrl: result.next, prevUrl: result.previous })
     }
 
@@ -80,14 +87,16 @@ interface IMove {
     const handleNoOfCards = (event: any) => {
         const limit = event.target.value
         getPokemonFromApi(limit)
-        setLimit(limit)
+        localStorage.setItem('limit', limit)
 
     }
-    const handleNextClick = async () => {
-        const result = await getPokemonPagination(pokemons.nextUrl)
+    const handlePaginationClick = async (url: string) => {
+        const result = await getPokemonPagination(url)
         setPokemons({ data: result.results, nextUrl: result.next, prevUrl: result.previous })
         setSearchedList([])
         setSearchText('')
+        const params = getParamsFromURI(result.next)
+        setPageCount(parseInt(params.get('offset')) / parseInt(params.get('limit')))
     }
 
     const handleSorting = (event: any) => {
@@ -102,21 +111,14 @@ interface IMove {
         return sortedPokemon
     }
 
-    const handlePrevClick = async () => {
-        const result = await getPokemonPagination(pokemons.prevUrl)
-        setPokemons({ data: result.results, nextUrl: result.next, prevUrl: result.previous })
-        setSearchedList([])
-        setSearchText('')
-    }
-
     const handleSearchOnChange = (event: any) => {
         const { value } = event.target
         const lowerTextValue = value.toLowerCase()
         setSearchText(value)
         const filteredBySearchText = details.filter(detail => {
             const lcName = detail.name.toLowerCase()
-            const lcAbility = detail.abilities.map(ability => ability.ability.name.toLowerCase().replace('-', '')).filter(ab=>ab.includes(lowerTextValue))
-            return (lcName.includes(lowerTextValue) || lcAbility.length>0)
+            const lcAbility = detail.abilities.map(ability => ability.ability.name.toLowerCase().replace('-', '')).filter(ab => ab.includes(lowerTextValue))
+            return (lcName.includes(lowerTextValue) || lcAbility.length > 0)
         })
         if (value !== "" && filteredBySearchText.length > 0) {
             setSearchedList(filteredBySearchText)
@@ -134,8 +136,8 @@ interface IMove {
         <div className='pokemon'>
             <div className='container'>
                 <div className="container d-flex justify-content-between mb-5">
-                    <NoOfCardSelect handleNoOfCards={(event) => handleNoOfCards(event)} />
-                    <SortByParamSelect handleSorting={(event) => handleSorting(event)} />
+                    <NoOfCardSelect handleNoOfCards={(event) => handleNoOfCards(event)} limit={parseInt(localLimit)} />
+                    <SortByParamSelect handleSorting={(event) => handleSorting(event)} localSortby={localSortby} />
                     <input
                         type="text"
                         value={searchText}
@@ -145,19 +147,22 @@ interface IMove {
                     />
                 </div>
                 <div className="container d-flex justify-content-between">
-                    <button disabled={pokemons.prevUrl == null} type="button" className="btn btn-primary" onClick={handlePrevClick}> &larr; Previous</button>
-                    <button type="button" className="btn btn-primary" onClick={handleNextClick}>Next &rarr;</button>
+                    <button disabled={pokemons.prevUrl == null} type="button" className="btn btn-primary" onClick={() => handlePaginationClick(pokemons.prevUrl)}> &larr; Previous</button>
+                    <button type="button" className="btn btn-link">{pageCount}</button>
+                    <button type="button" className="btn btn-primary" onClick={() => handlePaginationClick(pokemons.nextUrl)}>Next &rarr;</button>
+
                 </div>
                 <div className="pokemon__characters row">
-                    {list.map(pokemon => {
+                    {list.map((pokemon, index) => {
                         return (
-                            <Card pokemon={pokemon} />
+                            <Card key={index} pokemon={pokemon} />
                         )
                     })}
                 </div>
                 <div className="container d-flex justify-content-between">
-                    <button disabled={pokemons.prevUrl == null} type="button" className="btn btn-primary" onClick={handlePrevClick}> &larr; Previous</button>
-                    <button type="button" className="btn btn-primary" onClick={handleNextClick}>Next &rarr;</button>
+                    <button disabled={pokemons.prevUrl == null} type="button" className="btn btn-primary" onClick={() => handlePaginationClick(pokemons.prevUrl)}> &larr; Previous</button>
+                    <button type="button" className="btn btn-link">{pageCount}</button>
+                    <button type="button" className="btn btn-primary" onClick={() => handlePaginationClick(pokemons.nextUrl)}>Next &rarr;</button>
                 </div>
             </div>
         </div>
