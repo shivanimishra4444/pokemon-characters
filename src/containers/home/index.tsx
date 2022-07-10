@@ -1,4 +1,4 @@
-import { Pokemon } from '@/components/pokemon';
+import  Pokemon  from '@/components/pokemon';
 
 const Home = () => {
 

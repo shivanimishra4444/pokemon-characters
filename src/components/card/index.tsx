@@ -1,9 +1,10 @@
 import { capitalizeFirstLetter } from '@/helper/helper';
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { IDetail } from '../pokemon';
 import './card.scss'
 interface IProps {
-    pokemon: any
+    pokemon: IDetail
 }
 
 const Card: React.FC<IProps> = ({ pokemon }) => {   
@@ -15,7 +16,7 @@ const Card: React.FC<IProps> = ({ pokemon }) => {
                 <div className="card-body">
                     <p className="card-text"><b>Height:</b>{` ${pokemon.height} cm`}</p>
                     <p className="card-text"><b>Weight: </b>{` ${pokemon.weight} kg`}</p>
-                    <p className="card-text"><b>Abilities: </b>
+                    <p className="card-text"><b>Abilities: </b> 
                     {pokemon.abilities.map((ability, index )=> {
                         return <span key={index}>{` ${ability.ability.name} ,`}</span>
                     })}
