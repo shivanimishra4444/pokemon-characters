@@ -1,6 +1,10 @@
 import React from 'react';
 
-const SortByParamSelect = ({ handleSorting }) => {
+interface IProps {
+    handleSorting :(e)=>void
+}
+
+const SortByParamSelect : React.FC<IProps> = ({ handleSorting }) => {
     return (
         <div>
             <div className="row">
@@ -10,7 +14,7 @@ const SortByParamSelect = ({ handleSorting }) => {
                             <label>Sort By :</label>
                             <select className="form-control" name="city" onChange={handleSorting}>
                                 <option selected>Select</option>
-                                <option value="age">Age</option>
+                                <option value="name">Name</option>
                                 <option value="height">Height</option>
                                 <option value="weight">Weight</option>
                             </select>
