@@ -1,7 +1,11 @@
-.pokemon{
+.pokemon {
     background-color: #e9ecef;
-    &__characters{
-        padding-top:5rem;
+
+    &__characters {
+        padding-top: 3rem;
     }
-  
+
+    padding-top:5rem;
+    padding-bottom:5rem;
+
 }
